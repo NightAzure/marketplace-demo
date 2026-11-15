@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Plus, Store } from "lucide-react";
+import { CreditCard, Plus, Store } from "lucide-react";
 import { cn } from "cn";
 import { CATEGORIES } from "@/lib/constants/categories";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ interface SidebarProps {
 export function Sidebar({ onNavigate, className }: SidebarProps) {
   const pathname = usePathname();
   const isBrowseAll = pathname === "/";
+  const isConnect = pathname === "/connect";
 
   return (
     <nav
@@ -61,7 +62,7 @@ export function Sidebar({ onNavigate, className }: SidebarProps) {
           <span>Browse all</span>
         </Link>
 
-        <div className="pt-1 px-0.5">
+        <div className="pt-1 px-0.5 space-y-1.5">
           <Button
             asChild
             className="w-full justify-center gap-1.5 rounded-xl bg-[#EAF2FF] hover:bg-[#DCEAFE] text-[#1466D8] font-semibold shadow-none border border-[#1877F2]/20 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 active:scale-[0.98]"
@@ -71,6 +72,35 @@ export function Sidebar({ onNavigate, className }: SidebarProps) {
               <span>Create new listing</span>
             </Link>
           </Button>
+
+          <Link
+            href="/connect"
+            onClick={onNavigate}
+            className={cn(
+              "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all duration-200 ease-out active:scale-[0.98]",
+              isConnect
+                ? "bg-[#F5F3FF] text-[#4F46E5] font-semibold shadow-[inset_0_0_0_1px_rgba(99,91,255,0.18)]"
+                : "text-[#0F172A] font-medium hover:bg-[#F1F5F9] hover:translate-x-0.5"
+            )}
+          >
+            {isConnect && (
+              <span
+                className="animate-pop absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-gradient-to-b from-[#635BFF] to-[#4338CA]"
+                aria-hidden="true"
+              />
+            )}
+            <span
+              className={cn(
+                "flex size-8 shrink-0 items-center justify-center rounded-xl transition-all duration-200 ease-out",
+                isConnect
+                  ? "bg-gradient-to-br from-[#635BFF] to-[#4338CA] text-white shadow-xs"
+                  : "bg-[#F5F3FF] text-[#635BFF] group-hover:scale-105 group-hover:bg-[#EDE9FE]"
+              )}
+            >
+              <CreditCard className="size-4" aria-hidden="true" />
+            </span>
+            <span>Connect with Stripe</span>
+          </Link>
         </div>
       </div>
 

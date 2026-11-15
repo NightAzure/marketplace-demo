@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useState, type CSSProperties } from "react";
 import Link from "next/link";
-import { ArrowRight, MapPin, MessageCircle, Package } from "lucide-react";
+import { ArrowRight, CheckCircle2, MapPin, MessageCircle, Package } from "lucide-react";
 import { cn } from "cn";
 import type { Listing, ViewMode } from "@/lib/types";
 import { getCategoryByName } from "@/lib/constants/categories";
 import { formatPrice, formatRelativeTime } from "@/lib/format";
+import { MIN_STRIPE_PRICE_USD } from "@/lib/stripe/constants";
 import { Badge } from "@/components/ui/badge";
+import { BuyNowButton } from "@/components/marketplace/buy-now-button";
 
 interface ItemCardProps {
   listing: Listing;
@@ -16,42 +18,17 @@ interface ItemCardProps {
   animationIndex?: number;
 }
 
-function CardWrapper({
-  href,
-  previewMode,
-  className,
-  style,
-  children,
-}: {
-  href: string;
-  previewMode?: boolean;
-  className: string;
-  style?: CSSProperties;
-  children: ReactNode;
-}) {
-  if (previewMode) {
-    return (
-      <div className={className} style={style}>
-        {children}
-      </div>
-    );
-  }
-  return (
-    <Link href={href} className={className} style={style}>
-      {children}
-    </Link>
-  );
-}
-
 function ListingThumbnail({
   imageUrl,
   title,
+  isSold,
   onError,
   hasError,
   className,
 }: {
   imageUrl: string | null;
   title: string;
+  isSold: boolean;
   onError: () => void;
   hasError: boolean;
   className?: string;
@@ -63,6 +40,7 @@ function ListingThumbnail({
       <div
         className={cn(
           "flex h-full w-full flex-col items-center justify-center gap-1.5 bg-[#EEF2F7] text-[#64748B]",
+          isSold && "opacity-60 grayscale-[35%]",
           className
         )}
       >
@@ -80,6 +58,7 @@ function ListingThumbnail({
       loading="lazy"
       className={cn(
         "h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]",
+        isSold && "opacity-65 grayscale-[40%]",
         className
       )}
     />
@@ -96,6 +75,12 @@ export function ItemCard({
   const href = `/item/${listing.id}`;
   const formattedPrice = formatPrice(listing.price);
   const isFree = listing.price === 0 || formattedPrice === "Free";
+  const isSold = listing.status === "sold";
+  const canBuyNow =
+    !previewMode &&
+    !isSold &&
+    listing.seller_onboarded &&
+    listing.price >= MIN_STRIPE_PRICE_USD;
   const relativeTime = formatRelativeTime(listing.created_at);
   const categoryItem = getCategoryByName(listing.category);
   const entranceStyle: CSSProperties | undefined =
@@ -105,36 +90,60 @@ export function ItemCard({
 
   if (viewMode === "list") {
     return (
-      <CardWrapper
-        href={href}
-        previewMode={previewMode}
+      <article
         style={entranceStyle}
         className={cn(
-          "group flex gap-3.5 sm:gap-4 rounded-2xl border border-[#E2E8F0] bg-white p-3 shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition-all duration-200 ease-out",
+          "group relative flex gap-3.5 sm:gap-4 rounded-2xl border border-[#E2E8F0] bg-white p-3 shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition-all duration-200 ease-out",
           !previewMode &&
-            "animate-fade-up hover:-translate-y-0.5 hover:border-[#1877F2]/35 hover:shadow-[0_12px_28px_-6px_rgba(24,119,242,0.16),0_4px_10px_rgba(15,23,42,0.06)] active:scale-[0.995]"
+            "animate-fade-up hover:-translate-y-0.5 hover:border-[#1877F2]/35 hover:shadow-[0_12px_28px_-6px_rgba(24,119,242,0.16),0_4px_10px_rgba(15,23,42,0.06)]"
         )}
       >
-        <div className="relative h-28 w-32 sm:h-32 sm:w-44 shrink-0 overflow-hidden rounded-xl bg-[#F4F6FB]">
+        {!previewMode && (
+          <Link
+            href={href}
+            aria-label={`View ${listing.title}`}
+            className="absolute inset-0 z-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1877F2]"
+          />
+        )}
+
+        <div className="relative z-0 h-28 w-32 sm:h-32 sm:w-44 shrink-0 overflow-hidden rounded-xl bg-[#F4F6FB] pointer-events-none">
           <ListingThumbnail
             imageUrl={listing.image_url}
             title={listing.title}
+            isSold={isSold}
             hasError={imgError}
             onError={() => setImgError(true)}
           />
+          {isSold && (
+            <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-slate-900/90 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white shadow-xs">
+              <CheckCircle2 className="size-3 text-emerald-400" />
+              Sold
+            </span>
+          )}
         </div>
 
-        <div className="flex flex-1 flex-col justify-between min-w-0 py-0.5">
+        <div className="flex flex-1 flex-col justify-between min-w-0 py-0.5 pointer-events-none">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span
-                className={cn(
-                  "font-display text-lg font-bold tabular-nums tracking-tight",
-                  isFree ? "text-[#059669]" : "text-[#0F172A]"
+              <div className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    "font-display text-lg font-bold tabular-nums tracking-tight",
+                    isSold
+                      ? "text-[#64748B] line-through"
+                      : isFree
+                        ? "text-[#059669]"
+                        : "text-[#0F172A]"
+                  )}
+                >
+                  {formattedPrice}
+                </span>
+                {isSold && (
+                  <Badge className="border border-slate-200 bg-slate-900 text-white hover:bg-slate-900">
+                    Sold
+                  </Badge>
                 )}
-              >
-                {formattedPrice}
-              </span>
+              </div>
               <Badge
                 variant="secondary"
                 className={cn(
@@ -164,76 +173,123 @@ export function ItemCard({
               <span className="shrink-0">{relativeTime}</span>
             </div>
 
-            <span className="inline-flex items-center gap-1.5 rounded-xl bg-[#EAF2FF] px-3 py-1.5 text-xs font-semibold text-[#1466D8] transition-colors group-hover:bg-[#1877F2] group-hover:text-white">
-              <MessageCircle className="size-3.5" aria-hidden="true" />
-              <span>View &amp; Message</span>
-            </span>
+            <div className="flex items-center gap-2 pointer-events-auto">
+              {canBuyNow && (
+                <BuyNowButton
+                  listingId={listing.id}
+                  price={listing.price}
+                  variant="card"
+                  className="w-auto"
+                />
+              )}
+              <span className="pointer-events-none inline-flex items-center gap-1.5 rounded-xl bg-[#EAF2FF] px-3 py-1.5 text-xs font-semibold text-[#1466D8] transition-colors group-hover:bg-[#1877F2] group-hover:text-white">
+                <MessageCircle className="size-3.5" aria-hidden="true" />
+                <span>{isSold ? "View item" : "View & Message"}</span>
+              </span>
+            </div>
           </div>
         </div>
-      </CardWrapper>
+      </article>
     );
   }
 
   return (
-    <CardWrapper
-      href={href}
-      previewMode={previewMode}
+    <article
       style={entranceStyle}
       className={cn(
-        "group flex flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition-all duration-200 ease-out",
+        "group relative flex flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition-all duration-200 ease-out",
         !previewMode &&
-          "animate-fade-up hover:-translate-y-1 hover:border-[#1877F2]/35 hover:shadow-[0_12px_28px_-6px_rgba(24,119,242,0.16),0_4px_10px_rgba(15,23,42,0.06)] active:scale-[0.985]"
+          "animate-fade-up hover:-translate-y-1 hover:border-[#1877F2]/35 hover:shadow-[0_12px_28px_-6px_rgba(24,119,242,0.16),0_4px_10px_rgba(15,23,42,0.06)]"
       )}
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F4F6FB]">
+      {!previewMode && (
+        <Link
+          href={href}
+          aria-label={`View ${listing.title}`}
+          className="absolute inset-0 z-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1877F2]"
+        />
+      )}
+
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F4F6FB] pointer-events-none">
         <ListingThumbnail
           imageUrl={listing.image_url}
           title={listing.title}
+          isSold={isSold}
           hasError={imgError}
           onError={() => setImgError(true)}
         />
         <span
           className={cn(
-            "absolute top-2.5 left-2.5 max-w-[85%] truncate rounded-full border px-2.5 py-0.5 text-[11px] font-semibold shadow-xs backdrop-blur-xs",
+            "absolute top-2.5 left-2.5 max-w-[65%] truncate rounded-full border px-2.5 py-0.5 text-[11px] font-semibold shadow-xs backdrop-blur-xs",
             categoryItem?.pillClass ??
               "bg-white/90 text-[#0F172A] border-[#E2E8F0]"
           )}
         >
           {listing.category}
         </span>
+
+        {isSold && (
+          <span className="absolute top-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-slate-900/90 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
+            <CheckCircle2 className="size-3 text-emerald-400" />
+            Sold
+          </span>
+        )}
       </div>
 
-      <div className="flex flex-1 flex-col justify-between p-3.5">
+      <div className="flex flex-1 flex-col justify-between p-3.5 pointer-events-none">
         <div>
-          <p
-            className={cn(
-              "font-display text-lg font-bold leading-snug tabular-nums tracking-tight",
-              isFree ? "text-[#059669]" : "text-[#0F172A]"
+          <div className="flex items-center justify-between gap-2">
+            <p
+              className={cn(
+                "font-display text-lg font-bold leading-snug tabular-nums tracking-tight",
+                isSold
+                  ? "text-[#64748B] line-through"
+                  : isFree
+                    ? "text-[#059669]"
+                    : "text-[#0F172A]"
+              )}
+            >
+              {formattedPrice}
+            </p>
+            {isSold && (
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                Sold
+              </span>
             )}
-          >
-            {formattedPrice}
-          </p>
+          </div>
           <h3 className="mt-0.5 line-clamp-2 min-h-[2.5rem] text-sm font-medium leading-snug text-[#0F172A] transition-colors group-hover:text-[#1877F2]">
             {listing.title}
           </h3>
         </div>
 
-        <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-[#F1F5F9] pt-2 text-xs text-[#64748B]">
-          <div className="flex items-center gap-1 min-w-0">
-            <MapPin className="size-3 shrink-0" aria-hidden="true" />
-            <span className="truncate">{listing.location}</span>
-            <span className="shrink-0" aria-hidden="true">
-              ·
-            </span>
-            <span className="shrink-0">{relativeTime}</span>
-          </div>
+        <div className="mt-2.5 space-y-2.5">
+          {canBuyNow && (
+            <div className="pointer-events-auto">
+              <BuyNowButton
+                listingId={listing.id}
+                price={listing.price}
+                variant="card"
+              />
+            </div>
+          )}
 
-          <span className="inline-flex shrink-0 items-center gap-0.5 font-semibold text-[#1877F2] translate-x-1 opacity-0 transition-all duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100">
-            <span>View</span>
-            <ArrowRight className="size-3" aria-hidden="true" />
-          </span>
+          <div className="flex items-center justify-between gap-2 border-t border-[#F1F5F9] pt-2 text-xs text-[#64748B]">
+            <div className="flex items-center gap-1 min-w-0">
+              <MapPin className="size-3 shrink-0" aria-hidden="true" />
+              <span className="truncate">{listing.location}</span>
+              <span className="shrink-0" aria-hidden="true">
+                ·
+              </span>
+              <span className="shrink-0">{relativeTime}</span>
+            </div>
+
+            <span className="inline-flex shrink-0 items-center gap-0.5 font-semibold text-[#1877F2] translate-x-1 opacity-0 transition-all duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100">
+              <span>View</span>
+              <ArrowRight className="size-3" aria-hidden="true" />
+            </span>
+          </div>
         </div>
       </div>
-    </CardWrapper>
+    </article>
   );
 }

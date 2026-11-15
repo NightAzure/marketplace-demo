@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlertCircle,
@@ -247,6 +248,9 @@ export function CreateItemForm() {
     seller_email: sellerEmail.trim() || "you@example.com",
     image_url: imageUrl,
     location: previewLocation,
+    status: "available",
+    sold_at: null,
+    seller_onboarded: false,
     created_at: previewTimestamp,
     updated_at: previewTimestamp,
   };
@@ -545,7 +549,13 @@ export function CreateItemForm() {
           />
           <p className="flex items-center gap-1.5 text-xs text-[#64748B]">
             <ShieldCheck className="size-3.5 shrink-0 text-[#1877F2]" />
-            Buyer inquiries are emailed directly here — never shown in full publicly
+            <span>
+              Buyer inquiries are emailed directly here —{" "}
+              <Link href="/connect" className="font-semibold text-[#1877F2] hover:underline">
+                connect this email with Stripe
+              </Link>{" "}
+              to enable instant Buy Now.
+            </span>
           </p>
           {fieldErrors.seller_email && (
             <p className="text-xs font-medium text-rose-600">

@@ -5,6 +5,8 @@ export type ViewMode = "grid" | "list";
 
 export type SortOption = "newest" | "price_asc" | "price_desc";
 
+export type ListingStatus = "available" | "sold";
+
 export interface Listing {
   id: string;
   title: string;
@@ -14,6 +16,37 @@ export interface Listing {
   seller_email: string;
   image_url: string | null;
   location: string;
+  status: ListingStatus;
+  sold_at: string | null;
+  seller_onboarded: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SellerAccount {
+  id: string;
+  email: string;
+  stripe_account_id: string;
+  charges_enabled: boolean;
+  payouts_enabled: boolean;
+  details_submitted: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Order {
+  id: string;
+  listing_id: string;
+  stripe_checkout_session_id: string;
+  stripe_payment_intent_id: string | null;
+  connected_account_id: string;
+  seller_email: string;
+  buyer_email: string | null;
+  amount_cents: number;
+  platform_fee_cents: number;
+  seller_payout_cents: number;
+  currency: string;
+  status: "pending" | "paid" | "failed" | "refunded";
   created_at: string;
   updated_at: string;
 }
@@ -96,3 +129,19 @@ export const listingsQuerySchema = z.object({
 });
 
 export type ListingsQuery = z.infer<typeof listingsQuerySchema>;
+
+export const connectStripeSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Please enter a valid seller email address"),
+});
+
+export type ConnectStripeInput = z.infer<typeof connectStripeSchema>;
+
+export const createCheckoutSchema = z.object({
+  listing_id: z.string().uuid("Invalid listing ID"),
+});
+
+export type CreateCheckoutInput = z.infer<typeof createCheckoutSchema>;

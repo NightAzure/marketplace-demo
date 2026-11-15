@@ -27,10 +27,13 @@ function ItemDetailSkeleton() {
 
 async function ItemDetailContent({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ canceled?: string }>;
 }) {
   const { id } = await params;
+  const resolvedSearchParams = await searchParams;
   const { listing, error, status } = await getListingById(id);
 
   if (status === 503) {
@@ -65,17 +68,24 @@ async function ItemDetailContent({
     notFound();
   }
 
-  return <ItemDetailView listing={listing} />;
+  return (
+    <ItemDetailView
+      listing={listing}
+      checkoutCanceled={resolvedSearchParams.canceled === "1"}
+    />
+  );
 }
 
 export default function ItemDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ canceled?: string }>;
 }) {
   return (
     <Suspense fallback={<ItemDetailSkeleton />}>
-      <ItemDetailContent params={params} />
+      <ItemDetailContent params={params} searchParams={searchParams} />
     </Suspense>
   );
 }

@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Menu, Plus, Search, Store, X } from "lucide-react";
+import { CreditCard, Menu, Plus, Search, Store, X } from "lucide-react";
 import { CATEGORIES } from "@/lib/constants/categories";
 import { Button } from "@/components/ui/button";
 import {
@@ -213,8 +213,19 @@ export function Header() {
           />
         </div>
 
-        {/* Right: Primary Create Listing CTA */}
-        <div className="flex shrink-0 items-center lg:justify-self-end">
+        {/* Right: Seller Stripe Connect + Primary Create Listing CTA */}
+        <div className="flex shrink-0 items-center gap-2 lg:justify-self-end">
+          <Button
+            asChild
+            variant="outline"
+            className="h-9 rounded-xl border-[#E2E8F0] bg-white px-2.5 sm:px-3 text-xs sm:text-sm font-semibold text-[#0F172A] shadow-2xs transition-all duration-200 ease-out hover:border-[#635BFF]/40 hover:bg-[#F5F3FF] hover:text-[#4F46E5] active:scale-[0.98]"
+          >
+            <Link href="/connect">
+              <CreditCard className="size-4 text-[#635BFF]" aria-hidden="true" />
+              <span className="hidden md:inline">Connect with Stripe</span>
+            </Link>
+          </Button>
+
           <Button
             asChild
             className="h-9 rounded-xl bg-gradient-to-r from-[#1877F2] to-[#2563EB] px-3 sm:px-4 text-sm font-semibold text-white shadow-sm shadow-[#1877F2]/20 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:from-[#166FE5] hover:to-[#1D4ED8] hover:shadow-md hover:shadow-[#1877F2]/25 active:translate-y-0 active:scale-[0.98]"

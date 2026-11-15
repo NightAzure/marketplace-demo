@@ -3,11 +3,15 @@ import {
   getCategoryByName,
   getCategoryBySlug,
 } from "@/lib/constants/categories";
+import { normalizeSellerEmail } from "@/lib/stripe/server";
 import {
   createServerSupabaseClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
-import { normalizeListing } from "@/lib/supabase/queries";
+import {
+  getOnboardedSellerEmails,
+  normalizeListing,
+} from "@/lib/supabase/queries";
 import { createListingSchema, type SortOption } from "@/lib/types";
 
 const SUPABASE_UNCONFIGURED_ERROR =
@@ -94,8 +98,17 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const listings = (data ?? []).map((row) =>
-      normalizeListing(row as Record<string, unknown>)
+    const rows = (data ?? []) as Record<string, unknown>[];
+    const onboardedSet = await getOnboardedSellerEmails(
+      supabase,
+      rows.map((row) => String(row.seller_email ?? ""))
+    );
+
+    const listings = rows.map((row) =>
+      normalizeListing(
+        row,
+        onboardedSet.has(normalizeSellerEmail(String(row.seller_email ?? "")))
+      )
     );
 
     return NextResponse.json({
@@ -165,8 +178,12 @@ export async function POST(request: Request) {
       );
     }
 
+    const createdRow = data as Record<string, unknown>;
+    const sellerEmail = normalizeSellerEmail(String(createdRow.seller_email ?? ""));
+    const onboardedSet = await getOnboardedSellerEmails(supabase, [sellerEmail]);
+
     return NextResponse.json(
-      { listing: normalizeListing(data as Record<string, unknown>) },
+      { listing: normalizeListing(createdRow, onboardedSet.has(sellerEmail)) },
       { status: 201 }
     );
   } catch (err) {
