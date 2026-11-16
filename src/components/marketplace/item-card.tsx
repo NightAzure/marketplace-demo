@@ -7,9 +7,7 @@ import { cn } from "cn";
 import type { Listing, ViewMode } from "@/lib/types";
 import { getCategoryByName } from "@/lib/constants/categories";
 import { formatPrice, formatRelativeTime } from "@/lib/format";
-import { MIN_STRIPE_PRICE_USD } from "@/lib/stripe/constants";
 import { Badge } from "@/components/ui/badge";
-import { BuyNowButton } from "@/components/marketplace/buy-now-button";
 
 interface ItemCardProps {
   listing: Listing;
@@ -76,11 +74,6 @@ export function ItemCard({
   const formattedPrice = formatPrice(listing.price);
   const isFree = listing.price === 0 || formattedPrice === "Free";
   const isSold = listing.status === "sold";
-  const canBuyNow =
-    !previewMode &&
-    !isSold &&
-    listing.seller_onboarded &&
-    listing.price >= MIN_STRIPE_PRICE_USD;
   const relativeTime = formatRelativeTime(listing.created_at);
   const categoryItem = getCategoryByName(listing.category);
   const entranceStyle: CSSProperties | undefined =
@@ -173,20 +166,10 @@ export function ItemCard({
               <span className="shrink-0">{relativeTime}</span>
             </div>
 
-            <div className="flex items-center gap-2 pointer-events-auto">
-              {canBuyNow && (
-                <BuyNowButton
-                  listingId={listing.id}
-                  price={listing.price}
-                  variant="card"
-                  className="w-auto"
-                />
-              )}
-              <span className="pointer-events-none inline-flex items-center gap-1.5 rounded-xl bg-[#EAF2FF] px-3 py-1.5 text-xs font-semibold text-[#1466D8] transition-colors group-hover:bg-[#1877F2] group-hover:text-white">
-                <MessageCircle className="size-3.5" aria-hidden="true" />
-                <span>{isSold ? "View item" : "View & Message"}</span>
-              </span>
-            </div>
+            <span className="pointer-events-none inline-flex items-center gap-1.5 rounded-xl bg-[#EAF2FF] px-3 py-1.5 text-xs font-semibold text-[#1466D8] transition-colors group-hover:bg-[#1877F2] group-hover:text-white">
+              <MessageCircle className="size-3.5" aria-hidden="true" />
+              <span>{isSold ? "View item" : "View & Message"}</span>
+            </span>
           </div>
         </div>
       </article>
@@ -262,32 +245,20 @@ export function ItemCard({
           </h3>
         </div>
 
-        <div className="mt-2.5 space-y-2.5">
-          {canBuyNow && (
-            <div className="pointer-events-auto">
-              <BuyNowButton
-                listingId={listing.id}
-                price={listing.price}
-                variant="card"
-              />
-            </div>
-          )}
-
-          <div className="flex items-center justify-between gap-2 border-t border-[#F1F5F9] pt-2 text-xs text-[#64748B]">
-            <div className="flex items-center gap-1 min-w-0">
-              <MapPin className="size-3 shrink-0" aria-hidden="true" />
-              <span className="truncate">{listing.location}</span>
-              <span className="shrink-0" aria-hidden="true">
-                ·
-              </span>
-              <span className="shrink-0">{relativeTime}</span>
-            </div>
-
-            <span className="inline-flex shrink-0 items-center gap-0.5 font-semibold text-[#1877F2] translate-x-1 opacity-0 transition-all duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100">
-              <span>View</span>
-              <ArrowRight className="size-3" aria-hidden="true" />
+        <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-[#F1F5F9] pt-2 text-xs text-[#64748B]">
+          <div className="flex items-center gap-1 min-w-0">
+            <MapPin className="size-3 shrink-0" aria-hidden="true" />
+            <span className="truncate">{listing.location}</span>
+            <span className="shrink-0" aria-hidden="true">
+              ·
             </span>
+            <span className="shrink-0">{relativeTime}</span>
           </div>
+
+          <span className="inline-flex shrink-0 items-center gap-0.5 font-semibold text-[#1877F2] translate-x-1 opacity-0 transition-all duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100">
+            <span>View</span>
+            <ArrowRight className="size-3" aria-hidden="true" />
+          </span>
         </div>
       </div>
     </article>
