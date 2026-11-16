@@ -58,7 +58,10 @@ export async function GET(request: Request) {
     const offset = parsePositiveInt(searchParams.get("offset"), 0, 0, 10_000);
 
     const supabase = createServerSupabaseClient();
-    let query = supabase.from("listings").select("*", { count: "exact" });
+    let query = supabase
+      .from("listings")
+      .select("*", { count: "exact" })
+      .eq("status", "available");
 
     if (rawCategory && rawCategory.toLowerCase() !== "all") {
       const resolvedCategory =

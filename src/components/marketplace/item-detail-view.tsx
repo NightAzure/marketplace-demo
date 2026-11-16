@@ -273,7 +273,7 @@ export function ItemDetailView({
                     This item has been sold
                   </p>
                   <p className="mt-0.5 text-xs text-[#64748B]">
-                    Payment was confirmed via Stripe and this listing is no longer available to purchase.
+                    This listing has already been purchased and is no longer available.
                   </p>
                 </div>
               </div>
@@ -288,7 +288,7 @@ export function ItemDetailView({
               <p className="flex items-center justify-center gap-1.5 text-[11px] text-[#64748B]">
                 <ShieldCheck className="size-3.5 text-emerald-600" />
                 <span>
-                  Powered by Stripe Connect · {PLATFORM_FEE_PERCENT}% platform fee included
+                  Secure instant checkout · {PLATFORM_FEE_PERCENT}% marketplace fee included
                 </span>
               </p>
             </div>

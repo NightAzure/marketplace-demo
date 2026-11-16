@@ -218,8 +218,8 @@ export function CheckoutSuccessView() {
                   {webhookConfirmed
                     ? "Your order has been saved and this listing is now marked as Sold."
                     : isPaid
-                      ? "Payment succeeded on Stripe. Waiting for webhook confirmation to finalize the order."
-                      : "We are checking your payment status with Stripe."}
+                      ? "Payment received. Finalizing your order details..."
+                      : "We are checking your payment status."}
                 </p>
               </div>
             </div>
@@ -245,8 +245,8 @@ export function CheckoutSuccessView() {
                 )}
                 <span>
                   {isPolling
-                    ? "Confirming webhook event in Supabase..."
-                    : "Webhook confirmation pending — ensure your Stripe webhook endpoint is registered for this URL."}
+                    ? "Finalizing order confirmation..."
+                    : "Order confirmation is taking a moment longer than usual. Click refresh to check again."}
                 </span>
               </div>
               <Button
@@ -359,7 +359,7 @@ export function CheckoutSuccessView() {
           <div className="flex items-center gap-2 rounded-xl border border-emerald-200/70 bg-emerald-50/50 px-3.5 py-2.5 text-xs text-emerald-900">
             <ShieldCheck className="size-4 shrink-0 text-emerald-600" />
             <span>
-              Direct charge processed via Stripe Connect sandbox.
+              Payment processed securely via Stripe.
             </span>
           </div>
 
